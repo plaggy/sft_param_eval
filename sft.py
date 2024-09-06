@@ -14,12 +14,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM, 
 from datasets import load_dataset
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from peft import LoraConfig
-from accelerate import PartialState
+from accelerate import Accelerator
 import argparse
 import torch
 import os
 
-# device_string = PartialState().process_index
+device_index = Accelerator().process_index
+device_map = {"": device_index}
 
 
 def main(args):
@@ -65,13 +66,12 @@ def main(args):
 
     model_kwargs = {
         "pretrained_model_name_or_path": args.model_id,
-        "device_map": "auto",
         "attn_implementation": "flash_attention_2",
         "trust_remote_code": True,
         "torch_dtype": torch.float16,
         "token": args.hf_token,
         "device_map": "auto"
-        # "device_map": {'': device_string}
+        "device_map": device_map
     }
 
     if "AWQ" in args.model_id:
